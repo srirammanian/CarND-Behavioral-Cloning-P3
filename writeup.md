@@ -19,12 +19,9 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 
 [image1]: ./examples/model.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Grayscaling"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
+[image2]: ./examples/normal_driving.jpg "Normal Driving"
+[image3]: ./examples/left_turn.jpg "Left turn Image"
+[image4]: ./examples/left_turn_flipped.jpg "Flipped Image"
 
 ## Rubric Points
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -72,7 +69,7 @@ The model used an adam optimizer.  It was trained over 30 epochs, the first 10 a
 
 ####4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road and augmented my data with the sample data set provided.  I originally tried using my PS4 controller so that I could get better fine grained input but I had problems with the simulator reading the X-Y joystick values.  Therefore, most of the training data that I created was a combination of driving via the keyboard arrow keys and using my Apple mouse.  I found it difficult to use the Apple mouse and wasn't totally satisfied with the data which is why I included the sample set in my training data.  For the data I generated I drove 3 laps in the center of the lane, then I did 2 laps of data recovering from left and ride sides of the road, then did 1 lap where I tried to have as smooth curves as possible.
+Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road and augmented my data with the sample data set provided.  I originally tried using my PS4 controller so that I could get better fine grained input but I had problems with the simulator reading the X-Y joystick values.  Therefore, most of the training data that I created was a combination of driving via the keyboard arrow keys and using my Apple mouse.  I found it difficult to use the Apple mouse and wasn't totally satisfied with the data which is why I included the sample set in my training data.  For the data I generated I drove 4 laps in the center of the lane, then did 1 lap where I tried to have as smooth curves as possible.  I considered driving data where I drove from the right and left parts of the lane and recovered to the middle, but I first tested to see how my model did without that data. It turned out the model did fine without needing that extra data.
 
 For details about how I created the training data, see the next section. 
 
@@ -80,52 +77,33 @@ For details about how I created the training data, see the next section.
 
 ####1. Solution Design Approach
 
-The overall strategy for deriving a model architecture was to first implement a simple convolutional network and then progress to using the NVIDIA Self Driving CNN architecture.  My first step was to create a simple model consistening of a single hidden layer so I could verify the  model and my code's correctness.  I tested this model with 3 images - a image where the steering input was going left, one going straight, and one going to the right.  Once I was able to get correct predictions I moved on to creating a simple convolutional network similar to the Lenet model used earlier in the course.  I thought this model might be appropriate due to 
-
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
-
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
-
-To combat the overfitting, I modified the model so that ...
-
-Then I ... 
-
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
-
-At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
+The overall strategy for deriving a model architecture was to first implement a simple convolutional network and then progress to using the NVIDIA Self Driving CNN architecture.  My first step was to create a simple model consistening of a single hidden layer so I could verify the  model and my code's correctness.  I tested this model with 3 images - a image where the steering input was going left, one going straight, and one going to the right.  Once I was able to get correct predictions I moved on to creating a simple convolutional network similar to the Lenet model used earlier in the course.  This model did better than I expected - it negotiated the first turn well but would get consistently stuck on the bridge.  At this point I decided to implement the NVIDIA CNN architecture recommended in the lesson. 
+  In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. I added dropout layers at 50% between each FC layer.  This solved the overfitting issue and flipped my loss with my training set loss being higher than my validation set. 
+  At this point I used the left/right driving camera images as suggested by the lesson and found it made a huge difference in helping the model negotiate turns. I found I really did not need to augment the training data with my own recovery driving - though I'm sure this could make the model even better if it did end up on the edges of the road.
+  My model now made it almost around the entire track, but had some issues with the left-right sequence of turns in the track.  It was at this point that I discovered my model was expecting a BGR format image (due to using openCV to load the image), but the drive.py code was using a different image reader and was inputting a RGB format image into my model.  I corrected drive.py to use BGR and then tested my model.  This change allowed the car to drive around the entire track without leaving the road!
 
 ####2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
-
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
+The final model architecture can be found in model.py (lines 146-164). Here is a visualization of the architecture
 
 ![alt text][image1]
 
+I adjusted the filter and stride size of the 2nd-5th layers of the CNN in order to accomodate my image resizing and also to optimize the number of parameters.  By using a stride 2 for the 2nd layer and using 3x3 filters the parameter size reduced from ~20k to ~6k parameters.  This reduction helped the model to train faster but did come at a price in some accuracy as the model is a little 'jerkier' in turns.  Still, the car was able to negotiate the entire track so I thought it was sufficient to keep the model as is.
+
 ####3. Creation of the Training Set & Training Process
 
-To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
+To capture good driving behavior, I first recorded four laps on track one using center lane driving. Here is an example image of center lane driving:
 
 ![alt text][image2]
 
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to .... These images show what a recovery looks like starting from ... :
+To augment the data sat, I also flipped images and angles thinking that this would help the model better predict right hand turns as well (since track #1 is predominantly left hand turns). For example, here is an image that has then been flipped:
 
 ![alt text][image3]
 ![alt text][image4]
-![alt text][image5]
-
-Then I repeated this process on track two in order to get more data points.
-
-To augment the data sat, I also flipped images and angles thinking that this would ... For example, here is an image that has then been flipped:
-
-![alt text][image6]
-![alt text][image7]
-
-Etc ....
-
-After the collection process, I had X number of data points. I then preprocessed this data by ...
 
 
-I finally randomly shuffled the data set and put Y% of the data into a validation set. 
+After the collection process, I had 14961 number of data points. I augmented this data with the sample driving set to have a total of 41346 images. After using flipped images, this becomes 68910 images.  I then preprocessed the data by resizing the images to by half in a lambda layer, and then cropping out the top and bottom portion of the image (sky and car).  
 
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was Z as evidenced by ... I used an adam optimizer so that manually training the learning rate wasn't necessary.
+I finally randomly shuffled the data set and put 20% of the data into a validation set. 
+
+I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was 30 as evidenced by my training set not not monotonically improving its loss.  
