@@ -22,6 +22,8 @@ The goals / steps of this project are the following:
 [image2]: ./examples/normal_driving.jpg "Normal Driving"
 [image3]: ./examples/left_turn.jpg "Left turn Image"
 [image4]: ./examples/left_turn_flipped.jpg "Flipped Image"
+[image5]: ./examples/training_loss.png "Training Loss"
+[image6]: ./examples/val_loss.png "Validation Loss"
 
 ## Rubric Points
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -106,4 +108,7 @@ After the collection process, I had 14961 number of data points. I augmented thi
 
 I finally randomly shuffled the data set and put 20% of the data into a validation set. 
 
-I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was 30 as evidenced by my training set not not monotonically improving its loss.  
+I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was 30 as evidenced by my training set not not monotonically improving its loss.  The following images show my training and validation loss:
+
+[image5]
+[image6]
