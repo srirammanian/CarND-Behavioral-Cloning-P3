@@ -110,5 +110,5 @@ I finally randomly shuffled the data set and put 20% of the data into a validati
 
 I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was 30 as evidenced by my training set not not monotonically improving its loss.  The following images show my training and validation loss:
 
-[image5]
-[image6]
+![training loss][image5]
+![validation loss][image6]
